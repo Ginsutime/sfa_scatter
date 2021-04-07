@@ -80,8 +80,8 @@ class ScatterUI(QtWidgets.QDialog):
 
     def _create_xrot_rand_field_ui(self):
         layout = QtWidgets.QGridLayout()
-        self.x_min_lbl = QtWidgets.QLabel("X Rotation Minimum")
-        self.x_max_lbl = QtWidgets.QLabel("X Rotation Maximum")
+        self.x_min_lbl = QtWidgets.QLabel("X Rotation Variation Minimum")
+        self.x_max_lbl = QtWidgets.QLabel("X Rotation Variation Maximum")
         self.xrot_min = QtWidgets.QLineEdit()
         self.xrot_min.setMinimumWidth(100)
         self.xrot_max = QtWidgets.QLineEdit()
@@ -94,8 +94,8 @@ class ScatterUI(QtWidgets.QDialog):
 
     def _create_yrot_rand_field_ui(self):
         layout = QtWidgets.QGridLayout()
-        self.y_min_lbl = QtWidgets.QLabel("Y Rotation Minimum")
-        self.y_max_lbl = QtWidgets.QLabel("Y Rotation Maximum")
+        self.y_min_lbl = QtWidgets.QLabel("Y Rotation Variation Minimum")
+        self.y_max_lbl = QtWidgets.QLabel("Y Rotation Variation Maximum")
         self.yrot_min = QtWidgets.QLineEdit()
         self.yrot_min.setMinimumWidth(100)
         self.yrot_max = QtWidgets.QLineEdit()
@@ -108,8 +108,8 @@ class ScatterUI(QtWidgets.QDialog):
 
     def _create_zrot_rand_field_ui(self):
         layout = QtWidgets.QGridLayout()
-        self.z_min_lbl = QtWidgets.QLabel("Z Rotation Minimum")
-        self.z_max_lbl = QtWidgets.QLabel("Z Rotation Maximum")
+        self.z_min_lbl = QtWidgets.QLabel("Z Rotation Variation Minimum")
+        self.z_max_lbl = QtWidgets.QLabel("Z Rotation Variation Maximum")
         self.zrot_min = QtWidgets.QLineEdit()
         self.zrot_min.setMinimumWidth(100)
         self.zrot_max = QtWidgets.QLineEdit()
@@ -122,8 +122,8 @@ class ScatterUI(QtWidgets.QDialog):
 
     def _create_scale_rand_field_ui(self):
         layout = QtWidgets.QGridLayout()
-        self.z_min_lbl = QtWidgets.QLabel("Scale Minimum")
-        self.z_max_lbl = QtWidgets.QLabel("Scale Maximum")
+        self.z_min_lbl = QtWidgets.QLabel("Scale Variation Minimum")
+        self.z_max_lbl = QtWidgets.QLabel("Scale Variation Maximum")
         self.zrot_min = QtWidgets.QLineEdit()
         self.zrot_min.setMinimumWidth(100)
         self.zrot_max = QtWidgets.QLineEdit()
