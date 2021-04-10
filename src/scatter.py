@@ -86,8 +86,13 @@ class ScatterUI(QtWidgets.QDialog):
     @QtCore.Slot()
     def _scatter_click(self):
         """Scatters object with randomization specifications"""
-        self._set_scatterobject_properties_from_ui()
-        self.scatterobject.create_scatter_randomization()
+        if len(self.scatter_obj.text()) > 0:
+            self._set_scatterobject_properties_from_ui()
+            self.scatterobject.scatter_check()
+        else:
+            log.warning("Scatter Failed: Scatter Object Not Selected. Select "
+                        "a Scatter Object to fix this.")
+
 
     @QtCore.Slot()
     def _reset_click(self):
@@ -291,8 +296,7 @@ class ScatterUI(QtWidgets.QDialog):
 
     def _set_selected_scatter_object(self):
         self.scatterobject.select_scatter_object()
-        self.scatterobject.scatter_object_select = self.scatter_obj.setText(
-            self.scatterobject.current_object_def)
+        self.scatter_obj.setText(self.scatterobject.current_object_def)
 
     def _reset_scatterobject_properties_from_ui(self):
         self.scatterobject.scatter_x_min = self.xrot_min.setValue(0)
@@ -331,6 +335,18 @@ class ScatterObject(object):
         self.current_object_def = None
         self.scatter_target_def = None
         self.current_target_def = None
+
+    def scatter_check(self):
+        if self.scatter_x_min > self.scatter_x_max or \
+                self.scatter_y_min > self.scatter_y_max or \
+                self.scatter_z_min > self.scatter_z_max or \
+                self.scatter_scale_xmin > self.scatter_scale_xmax or \
+                self.scatter_scale_ymin > self.scatter_scale_ymax or \
+                self.scatter_scale_zmin > self.scatter_scale_zmax:
+            log.warning("Minimum value(s) greater than maximum value(s). "
+                        "This is not valid. Resubmit values correctly.")
+        else:
+            self.create_scatter_randomization()
 
     def create_scatter_randomization(self):
         xRot = random.uniform(self.scatter_x_min, self.scatter_x_max)
