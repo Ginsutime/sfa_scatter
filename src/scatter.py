@@ -25,7 +25,7 @@ class ScatterUI(QtWidgets.QDialog):
         self.setWindowTitle("Scatter Tool")
         self.setMinimumWidth(500)
         self.setMaximumWidth(1000)
-        self.setMaximumHeight(470)
+        self.setMaximumHeight(600)
         self.setWindowFlags(self.windowFlags() ^
                             QtCore.Qt.WindowContextHelpButtonHint)
         self.create_ui()
@@ -41,27 +41,36 @@ class ScatterUI(QtWidgets.QDialog):
         layout.addLayout(self.xrot_rand_lay)
         layout.addLayout(self.yrot_rand_lay)
         layout.addLayout(self.zrot_rand_lay)
-        layout.addLayout(self.scale_rand_lay)
+        layout.addLayout(self.xscale_rand_lay)
+        layout.addLayout(self.yscale_rand_lay)
+        layout.addLayout(self.zscale_rand_lay)
         layout.addStretch()
         layout.addLayout(self.bottom_button_rand_lay)
         return layout
 
     def layout_setup(self):
         main_lay = QtWidgets.QVBoxLayout()
-        self.scatter_field_lay = self._create_scatter_field_ui()
-        self.xrot_rand_lay = self._create_xrot_rand_field_ui()
-        self.yrot_rand_lay = self._create_yrot_rand_field_ui()
-        self.zrot_rand_lay = self._create_zrot_rand_field_ui()
-        self.scale_rand_lay = self._create_scale_rand_field_ui()
-        self.bottom_button_rand_lay = self._create_bottom_buttons_ui()
+        self.layout_creation()
         self.xrot_rand_lay.setRowMinimumHeight(0, 20)
         self.xrot_rand_lay.setRowMinimumHeight(1, 20)
         self.yrot_rand_lay.setRowMinimumHeight(0, 20)
         self.zrot_rand_lay.setRowMinimumHeight(0, 20)
-        self.scale_rand_lay.setRowMinimumHeight(0, 20)
+        self.xscale_rand_lay.setRowMinimumHeight(0, 40)
+        self.yscale_rand_lay.setRowMinimumHeight(0, 20)
+        self.zscale_rand_lay.setRowMinimumHeight(0, 20)
         self.bottom_button_rand_lay.setRowMinimumHeight(0, 20)
         self.setLayout(main_lay)
         return main_lay
+
+    def layout_creation(self):
+        self.scatter_field_lay = self._create_scatter_field_ui()
+        self.xrot_rand_lay = self._create_xrot_rand_field_ui()
+        self.yrot_rand_lay = self._create_yrot_rand_field_ui()
+        self.zrot_rand_lay = self._create_zrot_rand_field_ui()
+        self.xscale_rand_lay = self._create_xscale_rand_field_ui()
+        self.yscale_rand_lay = self._create_yscale_rand_field_ui()
+        self.zscale_rand_lay = self._create_zscale_rand_field_ui()
+        self.bottom_button_rand_lay = self._create_bottom_buttons_ui()
 
     def create_connections(self):
         """Connects Signals and Slots"""
@@ -173,37 +182,87 @@ class ScatterUI(QtWidgets.QDialog):
         self.zrot_max.setMinimumWidth(100)
         self.zrot_max.setSingleStep(10)
 
-    def _create_scale_rand_field_ui(self):
+    def _create_xscale_rand_field_ui(self):
         layout = QtWidgets.QGridLayout()
-        self.scale_min_lbl = QtWidgets.QLabel("Scale Variation Minimum")
-        self.scale_max_lbl = QtWidgets.QLabel("Scale Variation Maximum")
-        self._set_scale_spinbox()
-        layout.addWidget(self.scale_min_lbl, 7, 0)
-        layout.addWidget(self.scale_min, 8, 0)
-        layout.addWidget(self.scale_max_lbl, 7, 1)
-        layout.addWidget(self.scale_max, 8, 1)
+        self.scale_xmin_lbl = QtWidgets.QLabel("Scale X Variation Minimum")
+        self.scale_xmax_lbl = QtWidgets.QLabel("Scale X Variation Maximum")
+        self._set_xscale_spinbox()
+        layout.addWidget(self.scale_xmin_lbl, 7, 0)
+        layout.addWidget(self.scale_xmin, 8, 0)
+        layout.addWidget(self.scale_xmax_lbl, 7, 1)
+        layout.addWidget(self.scale_xmax, 8, 1)
         return layout
 
-    def _set_scale_spinbox(self):
-        self.scale_min = QtWidgets.QDoubleSpinBox()
-        self.scale_min.setMinimum(0.1)
-        self.scale_min.setValue(1.0)
-        self.scale_min.setMaximum(10)
-        self.scale_min.setMinimumWidth(100)
-        self.scale_min.setSingleStep(.1)
-        self.scale_max = QtWidgets.QDoubleSpinBox()
-        self.scale_max.setMinimum(0.1)
-        self.scale_max.setValue(1.0)
-        self.scale_max.setMaximum(10)
-        self.scale_max.setMinimumWidth(100)
-        self.scale_max.setSingleStep(.1)
+    def _create_yscale_rand_field_ui(self):
+        layout = QtWidgets.QGridLayout()
+        self.scale_ymin_lbl = QtWidgets.QLabel("Scale Y Variation Minimum")
+        self.scale_ymax_lbl = QtWidgets.QLabel("Scale Y Variation Maximum")
+        self._set_yscale_spinbox()
+        layout.addWidget(self.scale_ymin_lbl, 9, 0)
+        layout.addWidget(self.scale_ymin, 10, 0)
+        layout.addWidget(self.scale_ymax_lbl, 9, 1)
+        layout.addWidget(self.scale_ymax, 10, 1)
+        return layout
+
+    def _create_zscale_rand_field_ui(self):
+        layout = QtWidgets.QGridLayout()
+        self.scale_zmin_lbl = QtWidgets.QLabel("Scale Z Variation Minimum")
+        self.scale_zmax_lbl = QtWidgets.QLabel("Scale Z Variation Maximum")
+        self._set_zscale_spinbox()
+        layout.addWidget(self.scale_zmin_lbl, 11, 0)
+        layout.addWidget(self.scale_zmin, 12, 0)
+        layout.addWidget(self.scale_zmax_lbl, 11, 1)
+        layout.addWidget(self.scale_zmax, 12, 1)
+        return layout
+
+    def _set_xscale_spinbox(self):
+        self.scale_xmin = QtWidgets.QDoubleSpinBox()
+        self.scale_xmin.setMinimum(0.1)
+        self.scale_xmin.setValue(1.0)
+        self.scale_xmin.setMaximum(10)
+        self.scale_xmin.setMinimumWidth(100)
+        self.scale_xmin.setSingleStep(.1)
+        self.scale_xmax = QtWidgets.QDoubleSpinBox()
+        self.scale_xmax.setMinimum(0.1)
+        self.scale_xmax.setValue(1.0)
+        self.scale_xmax.setMaximum(10)
+        self.scale_xmax.setMinimumWidth(100)
+        self.scale_xmax.setSingleStep(.1)
+
+    def _set_yscale_spinbox(self):
+        self.scale_ymin = QtWidgets.QDoubleSpinBox()
+        self.scale_ymin.setMinimum(0.1)
+        self.scale_ymin.setValue(1.0)
+        self.scale_ymin.setMaximum(10)
+        self.scale_ymin.setMinimumWidth(100)
+        self.scale_ymin.setSingleStep(.1)
+        self.scale_ymax = QtWidgets.QDoubleSpinBox()
+        self.scale_ymax.setMinimum(0.1)
+        self.scale_ymax.setValue(1.0)
+        self.scale_ymax.setMaximum(10)
+        self.scale_ymax.setMinimumWidth(100)
+        self.scale_ymax.setSingleStep(.1)
+
+    def _set_zscale_spinbox(self):
+        self.scale_zmin = QtWidgets.QDoubleSpinBox()
+        self.scale_zmin.setMinimum(0.1)
+        self.scale_zmin.setValue(1.0)
+        self.scale_zmin.setMaximum(10)
+        self.scale_zmin.setMinimumWidth(100)
+        self.scale_zmin.setSingleStep(.1)
+        self.scale_zmax = QtWidgets.QDoubleSpinBox()
+        self.scale_zmax.setMinimum(0.1)
+        self.scale_zmax.setValue(1.0)
+        self.scale_zmax.setMaximum(10)
+        self.scale_zmax.setMinimumWidth(100)
+        self.scale_zmax.setSingleStep(.1)
 
     def _create_bottom_buttons_ui(self):
         layout = QtWidgets.QGridLayout()
         self.scatter_btn = QtWidgets.QPushButton("Scatter")
         self.reset_btn = QtWidgets.QPushButton("Reset")
-        layout.addWidget(self.scatter_btn, 10, 0)
-        layout.addWidget(self.reset_btn, 10, 1)
+        layout.addWidget(self.scatter_btn, 13, 0)
+        layout.addWidget(self.reset_btn, 13, 1)
         return layout
 
     def _create_scatter_field_headers(self):
@@ -223,8 +282,12 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.scatter_y_max = self.yrot_max.value()
         self.scatterobject.scatter_z_min = self.zrot_min.value()
         self.scatterobject.scatter_z_max = self.zrot_max.value()
-        self.scatterobject.scatter_scale_min = self.scale_min.value()
-        self.scatterobject.scatter_scale_max = self.scale_max.value()
+        self.scatterobject.scatter_scale_xmin = self.scale_xmin.value()
+        self.scatterobject.scatter_scale_xmax = self.scale_xmax.value()
+        self.scatterobject.scatter_scale_ymin = self.scale_ymin.value()
+        self.scatterobject.scatter_scale_ymax = self.scale_ymax.value()
+        self.scatterobject.scatter_scale_zmin = self.scale_zmin.value()
+        self.scatterobject.scatter_scale_zmax = self.scale_zmax.value()
 
     def _set_selected_scatter_object(self):
         self.scatterobject.select_scatter_object()
@@ -238,14 +301,19 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.scatter_y_max = self.yrot_max.setValue(360)
         self.scatterobject.scatter_z_min = self.zrot_min.setValue(0)
         self.scatterobject.scatter_z_max = self.zrot_max.setValue(360)
-        self.scatterobject.scatter_scale_min = self.scale_min.setValue(1.0)
-        self.scatterobject.scatter_scale_max = self.scale_max.setValue(1.0)
+        self.scatterobject.scatter_scale_xmin = self.scale_xmin.setValue(1.0)
+        self.scatterobject.scatter_scale_xmax = self.scale_xmax.setValue(1.0)
+        self.scatterobject.scatter_scale_ymin = self.scale_ymin.setValue(1.0)
+        self.scatterobject.scatter_scale_ymax = self.scale_ymax.setValue(1.0)
+        self.scatterobject.scatter_scale_zmin = self.scale_zmin.setValue(1.0)
+        self.scatterobject.scatter_scale_zmax = self.scale_zmax.setValue(1.0)
         self.scatterobject.scatter_obj_def = self.scatter_obj.setText("")
         self.scatterobject.scatter_target_def = self.scatter_targ.setText("")
 
 
 class ScatterObject(object):
     """Functionality to scatter UI and random rotation/scale"""
+
     def __init__(self):
         self.scatter_x_min = 0
         self.scatter_x_max = 0
@@ -253,8 +321,12 @@ class ScatterObject(object):
         self.scatter_y_max = 0
         self.scatter_z_min = 0
         self.scatter_z_max = 0
-        self.scatter_scale_min = 0
-        self.scatter_scale_max = 0
+        self.scatter_scale_xmin = 0
+        self.scatter_scale_xmax = 0
+        self.scatter_scale_ymin = 0
+        self.scatter_scale_ymax = 0
+        self.scatter_scale_zmin = 0
+        self.scatter_scale_zmax = 0
         self.scatter_obj_def = None
         self.current_object_def = None
         self.scatter_target_def = None
@@ -265,9 +337,13 @@ class ScatterObject(object):
         yRot = random.uniform(self.scatter_y_min, self.scatter_y_max)
         zRot = random.uniform(self.scatter_z_min, self.scatter_z_max)
         "cmds.rotate(xRot, yRot, zRot, scatterObject)"
-        scaleFactor = random.uniform(self.scatter_scale_min,
-                                     self.scatter_scale_max)
-        "cmds.scale(scaleFactor, scaleFactor, scaleFactor, scatterObject)"
+        scaleFactorX = random.uniform(self.scatter_scale_xmin,
+                                      self.scatter_scale_xmax)
+        scaleFactorY = random.uniform(self.scatter_scale_ymin,
+                                      self.scatter_scale_ymax)
+        scaleFactorZ = random.uniform(self.scatter_scale_zmin,
+                                      self.scatter_scale_zmax)
+        "cmds.scale(scaleFactorX, scaleFactorY, scaleFactorZ, scatterObject)"
 
     def select_scatter_object(self):
         self.scatter_obj_def = cmds.ls(os=True, o=True)
