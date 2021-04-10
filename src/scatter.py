@@ -67,6 +67,12 @@ class ScatterUI(QtWidgets.QDialog):
         """Connects Signals and Slots"""
         self.scatter_btn.clicked.connect(self._scatter_click)
         self.reset_btn.clicked.connect(self._reset_click)
+        self.scatter_obj_pb.clicked.connect(self._select_scatter_object_click)
+
+    @QtCore.Slot()
+    def _select_scatter_object_click(self):
+        """Sets scatter object to name of last selected object"""
+        self._set_selected_scatter_object()
 
     @QtCore.Slot()
     def _scatter_click(self):
@@ -79,21 +85,20 @@ class ScatterUI(QtWidgets.QDialog):
         """Reset UI values to default"""
         self._reset_scatterobject_properties_from_ui()
 
-
     def _create_scatter_field_ui(self):
         layout = self._create_scatter_field_headers()
-        self.scatter_targ = QtWidgets.QLineEdit()
-        self.scatter_targ.setMinimumWidth(100)
-        self.scatter_targ_pb = QtWidgets.QPushButton("Select")
-        self.scatter_targ_pb.setFixedWidth(50)
         self.scatter_obj = QtWidgets.QLineEdit()
         self.scatter_obj.setMinimumWidth(100)
         self.scatter_obj_pb = QtWidgets.QPushButton("Select")
         self.scatter_obj_pb.setFixedWidth(50)
-        layout.addWidget(self.scatter_targ, 1, 0)
-        layout.addWidget(self.scatter_targ_pb, 1, 2)
-        layout.addWidget(self.scatter_obj, 1, 3)
-        layout.addWidget(self.scatter_obj_pb, 1, 4)
+        self.scatter_targ = QtWidgets.QLineEdit()
+        self.scatter_targ.setMinimumWidth(100)
+        self.scatter_targ_pb = QtWidgets.QPushButton("Select")
+        self.scatter_targ_pb.setFixedWidth(50)
+        layout.addWidget(self.scatter_obj, 1, 0)
+        layout.addWidget(self.scatter_obj_pb, 1, 2)
+        layout.addWidget(self.scatter_targ, 1, 3)
+        layout.addWidget(self.scatter_targ_pb, 1, 4)
         return layout
 
     def _create_xrot_rand_field_ui(self):
@@ -221,6 +226,11 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.scatter_scale_min = self.scale_min.value()
         self.scatterobject.scatter_scale_max = self.scale_max.value()
 
+    def _set_selected_scatter_object(self):
+        self.scatterobject.select_scatter_object()
+        self.scatterobject.scatter_object_select = self.scatter_obj.setText(
+            self.scatterobject.current_object_def)
+
     def _reset_scatterobject_properties_from_ui(self):
         self.scatterobject.scatter_x_min = self.xrot_min.setValue(0)
         self.scatterobject.scatter_x_max = self.xrot_max.setValue(360)
@@ -246,7 +256,9 @@ class ScatterObject(object):
         self.scatter_scale_min = 0
         self.scatter_scale_max = 0
         self.scatter_obj_def = None
+        self.current_object_def = None
         self.scatter_target_def = None
+        self.current_target_def = None
 
     def create_scatter_randomization(self):
         xRot = random.uniform(self.scatter_x_min, self.scatter_x_max)
@@ -256,3 +268,7 @@ class ScatterObject(object):
         scaleFactor = random.uniform(self.scatter_scale_min,
                                      self.scatter_scale_max)
         "cmds.scale(scaleFactor, scaleFactor, scaleFactor, scatterObject)"
+
+    def select_scatter_object(self):
+        self.scatter_obj_def = cmds.ls(os=True, o=True)
+        self.current_object_def = self.scatter_obj_def[-1]
