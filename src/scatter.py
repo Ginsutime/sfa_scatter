@@ -271,4 +271,9 @@ class ScatterObject(object):
 
     def select_scatter_object(self):
         self.scatter_obj_def = cmds.ls(os=True, o=True)
-        self.current_object_def = self.scatter_obj_def[-1]
+        if len(self.scatter_obj_def) > 0:
+            self.current_object_def = self.scatter_obj_def[-1]
+        else:
+            self.current_object_def = None
+            log.warning("No objects are currently selected. Select one or "
+                        "more objects and then try again.")
