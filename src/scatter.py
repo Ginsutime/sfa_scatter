@@ -5,8 +5,6 @@ from PySide2 import QtWidgets, QtCore
 from shiboken2 import wrapInstance
 import maya.OpenMayaUI as omui
 import maya.cmds as cmds
-import pymel.core as pmc
-from pymel.core.system import Path
 
 log = logging.getLogger(__name__)
 
@@ -77,6 +75,7 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatter_btn.clicked.connect(self._scatter_click)
         self.reset_btn.clicked.connect(self._reset_click)
         self.scatter_obj_pb.clicked.connect(self._select_scatter_object_click)
+        self.scatter_targ_pb.clicked.connect(self._select_scatter_target_click)
 
     @QtCore.Slot()
     def _select_scatter_object_click(self):
@@ -84,15 +83,22 @@ class ScatterUI(QtWidgets.QDialog):
         self._set_selected_scatter_object()
 
     @QtCore.Slot()
+    def _select_scatter_target_click(self):
+        """Sets scatter object to name of last selected object"""
+        self._set_selected_scatter_target()
+
+    @QtCore.Slot()
     def _scatter_click(self):
         """Scatters object with randomization specifications"""
-        if len(self.scatter_obj.text()) > 0:
-            self._set_scatterobject_properties_from_ui()
-            self.scatterobject.scatter_check()
-        else:
+        if len(self.scatter_obj.text()) <= 0:
             log.warning("Scatter Failed: Scatter Object Not Selected. Select "
                         "a Scatter Object to fix this.")
-
+        elif len(self.scatter_targ.text()) <= 0:
+            log.warning("Scatter Failed: Scatter Destination Object Not "
+                        "Selected. Select a Scatter Object to fix this.")
+        else:
+            self._set_scatterobject_properties_from_ui()
+            self.scatterobject.scatter_check()
 
     @QtCore.Slot()
     def _reset_click(self):
@@ -298,6 +304,10 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.select_scatter_object()
         self.scatter_obj.setText(self.scatterobject.current_object_def)
 
+    def _set_selected_scatter_target(self):
+        self.scatterobject.select_target_object()
+        self.scatter_targ.setText(str(self.scatterobject.current_target_def))
+
     def _reset_scatterobject_properties_from_ui(self):
         self.scatterobject.scatter_x_min = self.xrot_min.setValue(0)
         self.scatterobject.scatter_x_max = self.xrot_max.setValue(360)
@@ -346,20 +356,44 @@ class ScatterObject(object):
             log.warning("Minimum value(s) greater than maximum value(s). "
                         "This is not valid. Resubmit values correctly.")
         else:
-            self.create_scatter_randomization()
+            self.scatter_object()
+
+    def scatter_object(self):
+        if cmds.objectType(self.current_object_def) == "transform":
+            for target in self.scatter_target_def:
+                self.scatterObject = cmds.instance(self.current_object_def,
+                                                   name=self.current_object_def
+                                                   + "_instance#")
+                x_point, y_point, z_point = cmds.pointPosition(target)
+                cmds.move(x_point, y_point, z_point, self.scatterObject)
+                self.create_scatter_randomization()
 
     def create_scatter_randomization(self):
         xRot = random.uniform(self.scatter_x_min, self.scatter_x_max)
         yRot = random.uniform(self.scatter_y_min, self.scatter_y_max)
         zRot = random.uniform(self.scatter_z_min, self.scatter_z_max)
-        "cmds.rotate(xRot, yRot, zRot, scatterObject)"
+        cmds.rotate(xRot, yRot, zRot, self.scatterObject)
         scaleFactorX = random.uniform(self.scatter_scale_xmin,
                                       self.scatter_scale_xmax)
         scaleFactorY = random.uniform(self.scatter_scale_ymin,
                                       self.scatter_scale_ymax)
         scaleFactorZ = random.uniform(self.scatter_scale_zmin,
                                       self.scatter_scale_zmax)
-        "cmds.scale(scaleFactorX, scaleFactorY, scaleFactorZ, scatterObject)"
+        cmds.scale(scaleFactorX, scaleFactorY, scaleFactorZ,
+                   self.scatterObject)
+
+    def select_target_object(self):
+        self.scatter_target_def = cmds.ls(os=True, fl=True)
+        for obj in self.scatter_target_def:
+            if 'vtx[' not in obj:
+                self.scatter_target_def.remove(obj)
+        self.current_target_def = self.scatter_target_def
+
+        if len(self.current_target_def) <= 0:
+            self.current_target_def = ''
+            log.warning("No vertices are currently selected for scatter "
+                        "destination. Select one or more vertices and then "
+                        "try again.")
 
     def select_scatter_object(self):
         self.scatter_obj_def = cmds.ls(os=True, o=True)
@@ -367,5 +401,6 @@ class ScatterObject(object):
             self.current_object_def = self.scatter_obj_def[-1]
         else:
             self.current_object_def = None
-            log.warning("No objects are currently selected. Select one or "
-                        "more objects and then try again.")
+            log.warning("No objects are currently selected for object being"
+                        " scattered. Select one or more objects and then "
+                        "try again.")
