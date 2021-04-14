@@ -359,14 +359,27 @@ class ScatterObject(object):
             self.scatter_object()
 
     def scatter_object(self):
-        if cmds.objectType(self.current_object_def) == "transform":
-            for target in self.scatter_target_def:
-                self.scatterObject = cmds.instance(self.current_object_def,
-                                                   name=self.current_object_def
-                                                   + "_instance#")
-                x_point, y_point, z_point = cmds.pointPosition(target)
-                cmds.move(x_point, y_point, z_point, self.scatterObject)
-                self.create_scatter_randomization()
+        for target in self.scatter_target_def:
+            self.scatterObject = cmds.instance(self.current_object_def,
+                                               name=self.current_object_def
+                                               + "_instance#")
+            x_point, y_point, z_point = cmds.pointPosition(target)
+            cmds.move(x_point, y_point, z_point, self.scatterObject)
+            self.create_scatter_randomization()
+
+    def select_target_object(self):
+        selection = cmds.ls(os=True, fl=True)
+        self.scatter_target_def = cmds.polyListComponentConversion(
+            selection, toVertex=True)
+        self.scatter_target_def = cmds.filterExpand(self.scatter_target_def,
+                                                    selectionMask=31)
+        if self.scatter_target_def is None:
+            self.current_target_def = ''
+            log.warning("No object or vertices are currently selected for "
+                        "scatter destination. Select one or more vertices, or "
+                        "an object and then try again.")
+        else:
+            self.current_target_def = self.scatter_target_def
 
     def create_scatter_randomization(self):
         xRot = random.uniform(self.scatter_x_min, self.scatter_x_max)
@@ -381,19 +394,6 @@ class ScatterObject(object):
                                       self.scatter_scale_zmax)
         cmds.scale(scaleFactorX, scaleFactorY, scaleFactorZ,
                    self.scatterObject)
-
-    def select_target_object(self):
-        self.scatter_target_def = cmds.ls(os=True, fl=True)
-        for obj in self.scatter_target_def:
-            if 'vtx[' not in obj:
-                self.scatter_target_def.remove(obj)
-        self.current_target_def = self.scatter_target_def
-
-        if len(self.current_target_def) <= 0:
-            self.current_target_def = ''
-            log.warning("No vertices are currently selected for scatter "
-                        "destination. Select one or more vertices and then "
-                        "try again.")
 
     def select_scatter_object(self):
         self.scatter_obj_def = cmds.ls(os=True, o=True)
