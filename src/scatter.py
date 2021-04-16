@@ -42,6 +42,7 @@ class ScatterUI(QtWidgets.QDialog):
         layout.addLayout(self.xscale_rand_lay)
         layout.addLayout(self.yscale_rand_lay)
         layout.addLayout(self.zscale_rand_lay)
+        layout.addLayout(self.selected_vert_perc_rand_lay)
         layout.addStretch()
         layout.addLayout(self.bottom_button_rand_lay)
         return layout
@@ -56,6 +57,7 @@ class ScatterUI(QtWidgets.QDialog):
         self.xscale_rand_lay.setRowMinimumHeight(0, 40)
         self.yscale_rand_lay.setRowMinimumHeight(0, 20)
         self.zscale_rand_lay.setRowMinimumHeight(0, 20)
+        self.selected_vert_perc_rand_lay.setRowMinimumHeight(0, 40)
         self.bottom_button_rand_lay.setRowMinimumHeight(0, 20)
         self.setLayout(main_lay)
         return main_lay
@@ -68,6 +70,8 @@ class ScatterUI(QtWidgets.QDialog):
         self.xscale_rand_lay = self._create_xscale_rand_field_ui()
         self.yscale_rand_lay = self._create_yscale_rand_field_ui()
         self.zscale_rand_lay = self._create_zscale_rand_field_ui()
+        self.selected_vert_perc_rand_lay = \
+            self._create_selected_vert_percentage_ui()
         self.bottom_button_rand_lay = self._create_bottom_buttons_ui()
 
     def create_connections(self):
@@ -268,12 +272,29 @@ class ScatterUI(QtWidgets.QDialog):
         self.scale_zmax.setMinimumWidth(100)
         self.scale_zmax.setSingleStep(.1)
 
+    def _create_selected_vert_percentage_ui(self):
+        layout = QtWidgets.QGridLayout()
+        self.selected_vert_lbl = QtWidgets.QLabel("Target Vertices Random "
+                                                  "Scatter Percentage")
+        self._set_selected_vert_percentage_spinbox()
+        layout.addWidget(self.selected_vert_lbl, 14, 0)
+        layout.addWidget(self.selected_vert_perc, 15, 0)
+        return layout
+
+    def _set_selected_vert_percentage_spinbox(self):
+        self.selected_vert_perc = QtWidgets.QSpinBox()
+        self.selected_vert_perc.setMinimum(0)
+        self.selected_vert_perc.setMaximum(100)
+        self.selected_vert_perc.setValue(100)
+        self.selected_vert_perc.setMinimumWidth(100)
+        self.selected_vert_perc.setSingleStep(5)
+
     def _create_bottom_buttons_ui(self):
         layout = QtWidgets.QGridLayout()
         self.scatter_btn = QtWidgets.QPushButton("Scatter")
         self.reset_btn = QtWidgets.QPushButton("Reset")
-        layout.addWidget(self.scatter_btn, 13, 0)
-        layout.addWidget(self.reset_btn, 13, 1)
+        layout.addWidget(self.scatter_btn, 16, 0)
+        layout.addWidget(self.reset_btn, 16, 1)
         return layout
 
     def _create_scatter_field_headers(self):
@@ -299,6 +320,7 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.scatter_scale_ymax = self.scale_ymax.value()
         self.scatterobject.scatter_scale_zmin = self.scale_zmin.value()
         self.scatterobject.scatter_scale_zmax = self.scale_zmax.value()
+        self.scatterobject.scatter_percentage = self.selected_vert_perc.value()
 
     def _set_selected_scatter_object(self):
         self.scatterobject.select_scatter_object()
@@ -321,6 +343,8 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.scatter_scale_ymax = self.scale_ymax.setValue(1.0)
         self.scatterobject.scatter_scale_zmin = self.scale_zmin.setValue(1.0)
         self.scatterobject.scatter_scale_zmax = self.scale_zmax.setValue(1.0)
+        self.scatterobject.scatter_percentage = \
+            self.selected_vert_perc.setValue(100)
         self.scatterobject.scatter_obj_def = self.scatter_obj.setText("")
         self.scatterobject.scatter_target_def = self.scatter_targ.setText("")
 
@@ -329,6 +353,13 @@ class ScatterObject(object):
     """Functionality to scatter UI and random rotation/scale"""
 
     def __init__(self):
+        self._init_scatter_fields_assignment()
+        self.scatter_obj_def = None
+        self.current_object_def = None
+        self.scatter_target_def = None
+        self.current_target_def = None
+
+    def _init_scatter_fields_assignment(self):
         self.scatter_x_min = 0
         self.scatter_x_max = 0
         self.scatter_y_min = 0
@@ -341,10 +372,7 @@ class ScatterObject(object):
         self.scatter_scale_ymax = 0
         self.scatter_scale_zmin = 0
         self.scatter_scale_zmax = 0
-        self.scatter_obj_def = None
-        self.current_object_def = None
-        self.scatter_target_def = None
-        self.current_target_def = None
+        self.scatter_percentage = 0
 
     def scatter_check(self):
         if self.scatter_x_min > self.scatter_x_max or \
@@ -356,11 +384,16 @@ class ScatterObject(object):
             log.warning("Minimum value(s) greater than maximum value(s). "
                         "This is not valid. Resubmit values correctly.")
         else:
-            self.scatter_object()
+            if self.scatter_percentage == 0:
+                log.warning("Percentage set to 0, no vertices randomly "
+                            "selected. Specify a higher percentage.")
+            else:
+                self.random_scatter_vertices()
+                self.scatter_object()
 
     def scatter_object(self):
         object_grouping = cmds.group(empty=True, name="instance_group#")
-        for target in self.scatter_target_def:
+        for target in self.percentage_selection:
             self.scatterObject = cmds.instance(self.current_object_def,
                                                name=self.current_object_def
                                                + "_instance#")
@@ -383,18 +416,25 @@ class ScatterObject(object):
         else:
             self.current_target_def = self.scatter_target_def
 
+    def random_scatter_vertices(self):
+        random_amount = int(round(len(self.scatter_target_def)
+                                  * (self.scatter_percentage * 0.01)))
+        self.percentage_selection = random.sample(self.scatter_target_def,
+                                                  k=random_amount)
+        cmds.select(self.percentage_selection)
+
     def create_scatter_randomization(self):
-        xRot = random.uniform(self.scatter_x_min, self.scatter_x_max)
-        yRot = random.uniform(self.scatter_y_min, self.scatter_y_max)
-        zRot = random.uniform(self.scatter_z_min, self.scatter_z_max)
-        cmds.rotate(xRot, yRot, zRot, self.scatterObject)
-        scaleFactorX = random.uniform(self.scatter_scale_xmin,
-                                      self.scatter_scale_xmax)
-        scaleFactorY = random.uniform(self.scatter_scale_ymin,
-                                      self.scatter_scale_ymax)
-        scaleFactorZ = random.uniform(self.scatter_scale_zmin,
-                                      self.scatter_scale_zmax)
-        cmds.scale(scaleFactorX, scaleFactorY, scaleFactorZ,
+        x_rot = random.uniform(self.scatter_x_min, self.scatter_x_max)
+        y_rot = random.uniform(self.scatter_y_min, self.scatter_y_max)
+        z_rot = random.uniform(self.scatter_z_min, self.scatter_z_max)
+        cmds.rotate(x_rot, y_rot, z_rot, self.scatterObject)
+        scale_factor_x = random.uniform(self.scatter_scale_xmin,
+                                        self.scatter_scale_xmax)
+        scale_factor_y = random.uniform(self.scatter_scale_ymin,
+                                        self.scatter_scale_ymax)
+        scale_factor_z = random.uniform(self.scatter_scale_zmin,
+                                        self.scatter_scale_zmax)
+        cmds.scale(scale_factor_x, scale_factor_y, scale_factor_z,
                    self.scatterObject)
 
     def select_scatter_object(self):
