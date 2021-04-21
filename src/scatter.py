@@ -36,6 +36,7 @@ class ScatterUI(QtWidgets.QDialog):
         layout = self.layout_setup()
         layout.addWidget(self.title_lbl)
         layout.addLayout(self.scatter_field_lay)
+        layout.addLayout(self.align_to_normals_lay)
         layout.addLayout(self.xrot_rand_lay)
         layout.addLayout(self.yrot_rand_lay)
         layout.addLayout(self.zrot_rand_lay)
@@ -64,6 +65,7 @@ class ScatterUI(QtWidgets.QDialog):
 
     def layout_creation(self):
         self.scatter_field_lay = self._create_scatter_field_ui()
+        self.align_to_normals_lay = self._create_align_to_normals_ui()
         self.xrot_rand_lay = self._create_xrot_rand_field_ui()
         self.yrot_rand_lay = self._create_yrot_rand_field_ui()
         self.zrot_rand_lay = self._create_zrot_rand_field_ui()
@@ -123,6 +125,13 @@ class ScatterUI(QtWidgets.QDialog):
         layout.addWidget(self.scatter_obj_pb, 1, 2)
         layout.addWidget(self.scatter_targ, 1, 3)
         layout.addWidget(self.scatter_targ_pb, 1, 4)
+        return layout
+
+    def _create_align_to_normals_ui(self):
+        layout = QtWidgets.QGridLayout()
+        self.align_to_normals = QtWidgets.QCheckBox("Align Scatter Objects to "
+                                                    "Target Object Normals")
+        layout.addWidget(self.align_to_normals, 2, 0)
         return layout
 
     def _create_xrot_rand_field_ui(self):
@@ -401,6 +410,11 @@ class ScatterObject(object):
             x_point, y_point, z_point = cmds.pointPosition(target)
             cmds.move(x_point, y_point, z_point, self.scatterObject)
             self.create_scatter_randomization()
+
+    def scatter_object_normal_align(self):
+        constraint = cmds.normalConstraint(self.scatter_target_def,
+                                           self.scatterObject)
+        cmds.delete(constraint)
 
     def select_target_object(self):
         selection = cmds.ls(os=True, fl=True)
