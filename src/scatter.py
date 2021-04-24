@@ -82,6 +82,9 @@ class ScatterUI(QtWidgets.QDialog):
         self.reset_btn.clicked.connect(self._reset_click)
         self.scatter_obj_pb.clicked.connect(self._select_scatter_object_click)
         self.scatter_targ_pb.clicked.connect(self._select_scatter_target_click)
+        self.align_to_normals.clicked.connect(self._align_to_normals_click)
+        self.align_to_normals_and_rotation.clicked.connect(
+            self._align_to_normals_and_random_rotate_click)
 
     @QtCore.Slot()
     def _select_scatter_object_click(self):
@@ -92,6 +95,16 @@ class ScatterUI(QtWidgets.QDialog):
     def _select_scatter_target_click(self):
         """Sets scatter object to name of last selected object"""
         self._set_selected_scatter_target()
+
+    @QtCore.Slot()
+    def _align_to_normals_click(self):
+        """Aligns to normals when box is checked"""
+        self._set_align_to_normals_values()
+
+    @QtCore.Slot()
+    def _align_to_normals_and_random_rotate_click(self):
+        """Aligns to normals when box is checked"""
+        self._set_align_to_normals_values_and_rotate_randomly()
 
     @QtCore.Slot()
     def _scatter_click(self):
@@ -129,10 +142,26 @@ class ScatterUI(QtWidgets.QDialog):
 
     def _create_align_to_normals_ui(self):
         layout = QtWidgets.QGridLayout()
-        self.align_to_normals = QtWidgets.QCheckBox("Align Scatter Objects to "
-                                                    "Target Object Normals")
+        self.align_to_normals = QtWidgets.QCheckBox("Align to Normals")
         layout.addWidget(self.align_to_normals, 2, 0)
+        self.align_to_normals_and_rotation \
+            = QtWidgets.QCheckBox("Align to Normals with Random Rotation")
+        layout.addWidget(self.align_to_normals_and_rotation, 2, 1)
         return layout
+
+    def _set_align_to_normals_values(self):
+        if self.align_to_normals.isChecked():
+            self.align_to_normals_and_rotation.setChecked(False)
+            self.scatterobject.form_of_scatter = 1
+        else:
+            self.scatterobject.form_of_scatter = 0
+
+    def _set_align_to_normals_values_and_rotate_randomly(self):
+        if self.align_to_normals_and_rotation.isChecked():
+            self.align_to_normals.setChecked(False)
+            self.scatterobject.form_of_scatter = 2
+        else:
+            self.scatterobject.form_of_scatter = 0
 
     def _create_xrot_rand_field_ui(self):
         layout = QtWidgets.QGridLayout()
@@ -340,6 +369,16 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatter_targ.setText(str(self.scatterobject.current_target_def))
 
     def _reset_scatterobject_properties_from_ui(self):
+        self._reset_scatter_scale_and_rotation_from_ui()
+        self.align_to_normals.setChecked(False)
+        self.align_to_normals_and_rotation.setChecked(False)
+        self.scatterobject.form_of_scatter = 0
+        self.scatterobject.scatter_percentage = \
+            self.selected_vert_perc.setValue(100)
+        self.scatterobject.scatter_obj_def = self.scatter_obj.setText("")
+        self.scatterobject.scatter_target_def = self.scatter_targ.setText("")
+
+    def _reset_scatter_scale_and_rotation_from_ui(self):
         self.scatterobject.scatter_x_min = self.xrot_min.setValue(0)
         self.scatterobject.scatter_x_max = self.xrot_max.setValue(360)
         self.scatterobject.scatter_y_min = self.yrot_min.setValue(0)
@@ -352,10 +391,6 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.scatter_scale_ymax = self.scale_ymax.setValue(1.0)
         self.scatterobject.scatter_scale_zmin = self.scale_zmin.setValue(1.0)
         self.scatterobject.scatter_scale_zmax = self.scale_zmax.setValue(1.0)
-        self.scatterobject.scatter_percentage = \
-            self.selected_vert_perc.setValue(100)
-        self.scatterobject.scatter_obj_def = self.scatter_obj.setText("")
-        self.scatterobject.scatter_target_def = self.scatter_targ.setText("")
 
 
 class ScatterObject(object):
@@ -367,6 +402,7 @@ class ScatterObject(object):
         self.current_object_def = None
         self.scatter_target_def = None
         self.current_target_def = None
+        self.form_of_scatter = 0
 
     def _init_scatter_fields_assignment(self):
         self.scatter_x_min = 0
@@ -397,8 +433,18 @@ class ScatterObject(object):
                 log.warning("Percentage set to 0, no vertices randomly "
                             "selected. Specify a higher percentage.")
             else:
-                self.random_scatter_vertices()
-                self.scatter_object()
+                self.scatter_check_internal_align_check()
+
+    def scatter_check_internal_align_check(self):
+        if self.form_of_scatter == 0:
+            self.random_scatter_vertices()
+            self.scatter_object()
+        elif self.form_of_scatter == 1:
+            self.random_scatter_vertices()
+            self.scatter_object_align_normals()
+        elif self.form_of_scatter == 2:
+            self.random_scatter_vertices()
+            self.scatter_object_align_normals_and_rand_rotation()
 
     def scatter_object(self):
         object_grouping = cmds.group(empty=True, name="instance_group#")
@@ -409,12 +455,37 @@ class ScatterObject(object):
             cmds.parent(self.scatterObject, object_grouping)
             x_point, y_point, z_point = cmds.pointPosition(target)
             cmds.move(x_point, y_point, z_point, self.scatterObject)
-            self.create_scatter_randomization()
+            self.create_rotation_scatter_randomization()
+            self.create_scale_scatter_randomization()
 
-    def scatter_object_normal_align(self):
-        constraint = cmds.normalConstraint(self.scatter_target_def,
-                                           self.scatterObject)
-        cmds.delete(constraint)
+    def scatter_object_align_normals(self):
+        object_grouping = cmds.group(empty=True, name="instance_group#")
+        for target in self.percentage_selection:
+            self.scatterObject = cmds.instance(self.current_object_def,
+                                               name=self.current_object_def
+                                               + "_instance#")
+            cmds.parent(self.scatterObject, object_grouping)
+            x_point, y_point, z_point = cmds.pointPosition(target)
+            cmds.move(x_point, y_point, z_point, self.scatterObject)
+            self.create_scale_scatter_randomization()
+            constraint = cmds.normalConstraint(self.scatter_target_def,
+                                               self.scatterObject)
+            cmds.delete(constraint)
+
+    def scatter_object_align_normals_and_rand_rotation(self):
+        object_grouping = cmds.group(empty=True, name="instance_group#")
+        for target in self.percentage_selection:
+            self.scatterObject = cmds.instance(self.current_object_def,
+                                               name=self.current_object_def
+                                               + "_instance#")
+            cmds.parent(self.scatterObject, object_grouping)
+            x_point, y_point, z_point = cmds.pointPosition(target)
+            cmds.move(x_point, y_point, z_point, self.scatterObject)
+            self.create_scale_scatter_randomization()
+            constraint = cmds.normalConstraint(self.scatter_target_def,
+                                               self.scatterObject)
+            cmds.delete(constraint)
+            self.create_rotation_scatter_randomization()
 
     def select_target_object(self):
         selection = cmds.ls(os=True, fl=True)
@@ -437,11 +508,13 @@ class ScatterObject(object):
                                                   k=random_amount)
         cmds.select(self.percentage_selection)
 
-    def create_scatter_randomization(self):
+    def create_rotation_scatter_randomization(self):
         x_rot = random.uniform(self.scatter_x_min, self.scatter_x_max)
         y_rot = random.uniform(self.scatter_y_min, self.scatter_y_max)
         z_rot = random.uniform(self.scatter_z_min, self.scatter_z_max)
         cmds.rotate(x_rot, y_rot, z_rot, self.scatterObject)
+
+    def create_scale_scatter_randomization(self):
         scale_factor_x = random.uniform(self.scatter_scale_xmin,
                                         self.scatter_scale_xmax)
         scale_factor_y = random.uniform(self.scatter_scale_ymin,
