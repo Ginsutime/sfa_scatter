@@ -23,7 +23,7 @@ class ScatterUI(QtWidgets.QDialog):
         self.setWindowTitle("Scatter Tool")
         self.setMinimumWidth(500)
         self.setMaximumWidth(1000)
-        self.setMaximumHeight(600)
+        self.setMaximumHeight(730)
         self.setWindowFlags(self.windowFlags() ^
                             QtCore.Qt.WindowContextHelpButtonHint)
         self.create_ui()
@@ -314,10 +314,23 @@ class ScatterUI(QtWidgets.QDialog):
         layout = QtWidgets.QGridLayout()
         self.selected_vert_lbl = QtWidgets.QLabel("Target Vertices Random "
                                                   "Scatter Percentage")
+        self.obj_embed_offset_lbl = QtWidgets.QLabel("Scatter Object Embed "
+                                                     "Position Offset")
         self._set_selected_vert_percentage_spinbox()
+        self._create_y_position_offset_spinbox()
         layout.addWidget(self.selected_vert_lbl, 14, 0)
+        layout.addWidget(self.obj_embed_offset_lbl, 14, 1)
         layout.addWidget(self.selected_vert_perc, 15, 0)
+        layout.addWidget(self.obj_embed_offset, 15, 1)
         return layout
+
+    def _create_y_position_offset_spinbox(self):
+        self.obj_embed_offset = QtWidgets.QDoubleSpinBox()
+        self.obj_embed_offset.setMinimum(-10)
+        self.obj_embed_offset.setValue(0)
+        self.obj_embed_offset.setMaximum(10)
+        self.obj_embed_offset.setMinimumWidth(100)
+        self.obj_embed_offset.setSingleStep(.1)
 
     def _set_selected_vert_percentage_spinbox(self):
         self.selected_vert_perc = QtWidgets.QSpinBox()
@@ -359,6 +372,7 @@ class ScatterUI(QtWidgets.QDialog):
         self.scatterobject.scatter_scale_zmin = self.scale_zmin.value()
         self.scatterobject.scatter_scale_zmax = self.scale_zmax.value()
         self.scatterobject.scatter_percentage = self.selected_vert_perc.value()
+        self.scatterobject.obj_pos_offset = self.obj_embed_offset.value()
 
     def _set_selected_scatter_object(self):
         self.scatterobject.select_scatter_object()
@@ -377,6 +391,7 @@ class ScatterUI(QtWidgets.QDialog):
             self.selected_vert_perc.setValue(100)
         self.scatterobject.scatter_obj_def = self.scatter_obj.setText("")
         self.scatterobject.scatter_target_def = self.scatter_targ.setText("")
+        self.scatterobject.obj_pos_offset = self.obj_embed_offset.setValue(0)
 
     def _reset_scatter_scale_and_rotation_from_ui(self):
         self.scatterobject.scatter_x_min = self.xrot_min.setValue(0)
@@ -403,6 +418,7 @@ class ScatterObject(object):
         self.scatter_target_def = None
         self.current_target_def = None
         self.form_of_scatter = 0
+        self.obj_pos_offset = 0
 
     def _init_scatter_fields_assignment(self):
         self.scatter_x_min = 0
@@ -455,8 +471,9 @@ class ScatterObject(object):
             cmds.parent(self.scatterObject, object_grouping)
             x_point, y_point, z_point = cmds.pointPosition(target)
             cmds.move(x_point, y_point, z_point, self.scatterObject)
-            self.create_rotation_scatter_randomization()
             self.create_scale_scatter_randomization()
+            self.offset_scatter_object_embed_pos_without_constraint()
+            self.create_rotation_scatter_randomization()
 
     def scatter_object_align_normals(self):
         object_grouping = cmds.group(empty=True, name="instance_group#")
@@ -471,6 +488,7 @@ class ScatterObject(object):
             constraint = cmds.normalConstraint(self.scatter_target_def,
                                                self.scatterObject)
             cmds.delete(constraint)
+            self.offset_scatter_object_embed_pos()
 
     def scatter_object_align_normals_and_rand_rotation(self):
         object_grouping = cmds.group(empty=True, name="instance_group#")
@@ -485,7 +503,16 @@ class ScatterObject(object):
             constraint = cmds.normalConstraint(self.scatter_target_def,
                                                self.scatterObject)
             cmds.delete(constraint)
+            self.offset_scatter_object_embed_pos()
             self.create_rotation_scatter_randomization()
+
+    def offset_scatter_object_embed_pos(self):
+        cmds.move(self.obj_pos_offset, 0, 0, self.scatterObject,
+                  objectSpace=True, relative=True)
+
+    def offset_scatter_object_embed_pos_without_constraint(self):
+        cmds.move(0, self.obj_pos_offset, 0, self.scatterObject,
+                  objectSpace=True, relative=True)
 
     def select_target_object(self):
         selection = cmds.ls(os=True, fl=True)
