@@ -47,6 +47,7 @@ class ScatterUI(QtWidgets.QDialog):
         return layout
 
     def layout_setup(self):
+        """Sets row min heights to fix layout spacing"""
         main_lay = QtWidgets.QVBoxLayout()
         self.layout_creation()
         self.xrot_rand_lay.setRowMinimumHeight(0, 20)
@@ -62,6 +63,7 @@ class ScatterUI(QtWidgets.QDialog):
         return main_lay
 
     def layout_creation(self):
+        """Assigns variable names to method calls"""
         self.scatter_field_lay = self._create_scatter_field_ui()
         self.align_to_normals_lay = self._create_align_to_normals_ui()
         self.xrot_rand_lay = self._create_xrot_rand_field_ui()
