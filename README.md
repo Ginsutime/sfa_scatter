@@ -20,8 +20,8 @@ sfa_scatter
       - Object being scattered or scatter destination object fields are empty
       - Select button on object being scattered or scatter destination object is clicked with no objects selected in scene
       - Minimum values of XYZ rotation or scale are higher than the maximum values
-      - Percentage of selected target object vertices to scatter onto is set to 0, meaning none would be scattered\
+      - Percentage of selected target object vertices to scatter onto is set to 0, meaning none would be scattered
       
-**Date When Code Was Written:**\
+**Date when Code was Written (Excluding Updates to Readme):**\
 First Commit: April 4, 2021\
 Final Commit: April 29, 2021
